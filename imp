@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imposter Guessing Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <style>
+        /* Custom font for a clean look */
+        body {
+            font-family: 'Montserrat', sans-serif; /* Primary body font */
+            background-color: #1a1a2e; /* Deep dark blue/purple background */
+            color: #f0f0f0; /* Light gray text for contrast */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem; /* Increased padding */
+            box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        /* Ensure the main container is responsive */
+        #game-container {
+            max-width: 95%; /* Slightly wider */
+            width: 950px; /* Increased max-width */
+            background-color: #2e2e4a; /* Slightly lighter dark blue/purple for container */
+            border-radius: 4rem; /* MORE ROUNDED */
+            padding: 4rem; /* Increased padding */
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.4); /* Stronger, softer shadow */
+            text-align: center;
+            border: 4px solid rgba(255, 255, 255, 0.15); /* More visible, slightly thicker border */
+            animation: fadeIn 1.2s ease-out; /* Slower fade in animation */
+        }
+
+        /* Keyframe for fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Style for buttons */
+        .btn {
+            background-image: linear-gradient(to right, #00bcd4, #673ab7); /* Electric blue to deep purple gradient */
+            @apply text-white font-extrabold py-4.5 px-9 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-400 ease-in-out transform hover:scale-105 active:scale-95; /* MORE ROUNDED */
+            letter-spacing: 0.1em; /* More spaced letters */
+            text-transform: uppercase; /* Uppercase text for buttons */
+            font-family: 'Bebas Neue', sans-serif; /* Bebas Neue for buttons */
+            font-size: 1.8rem; /* Larger button text */
+        }
+        .btn-red {
+            background-image: none; /* Override gradient for specific colors */
+            @apply bg-red-600 hover:bg-red-700;
+        }
+        .btn-green {
+            background-image: none; /* Override gradient for specific colors */
+            @apply bg-emerald-500 hover:bg-emerald-600; /* Brighter emerald green */
+        }
+        .btn-purple { /* New button style for "Reveal My Role" */
+            background-image: none; /* Override gradient for specific colors */
+            @apply bg-purple-700 hover:bg-purple-800; /* Deeper purple */
+        }
+        /* Style for input fields */
+        input[type="text"], input[type="number"], textarea {
+            @apply bg-gray-800 text-white p-5 rounded-3xl border-2 border-blue-400 focus:outline-none focus:ring-4 focus:ring-green-400 transition-all duration-300 ease-in-out; /* MORE ROUNDED */
+            font-size: 1.3rem; /* Larger text in inputs */
+            font-weight: 600; /* Semi-bold weight */
+            color: #ffffff; /* Explicitly white text for input */
+        }
+        input::placeholder, textarea::placeholder {
+            color: #a0aec0; /* Lighter gray for placeholders */
+            opacity: 0.9; /* Ensure opacity is full */
+        }
+        /* Card styling for answers/players */
+        .card {
+            @apply bg-gray-800 p-8 rounded-3xl shadow-lg flex flex-col items-center justify-center transition-all duration-400 ease-in-out hover:shadow-xl hover:translate-y-[-10px]; /* Already rounded, keeping consistent */
+            border: 3px solid #00bcd4; /* Electric blue border */
+        }
+        .card p:first-child { /* Player name in card */
+            @apply text-3xl font-bold text-pink-400 mb-3; /* Pink for player names */
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        .card p:last-child { /* Answer in card */
+            @apply text-xl text-gray-200; /* Lighter gray for answers */
+        }
+
+        .message-box {
+            @apply bg-gray-900 text-white p-7 rounded-3xl shadow-2xl mb-10 text-center text-2xl font-bold; /* MORE ROUNDED */
+            animation: slideInTop 0.7s ease-out; /* Slower slide-in */
+            border: 2px solid #ffeb3b; /* Yellow border for messages */
+        }
+        @keyframes slideInTop {
+            from { opacity: 0; transform: translateY(-40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Player turn instruction styling */
+        #player-turn-instruction {
+            font-size: 3.5rem; /* Even larger font */
+            color: #e91e63; /* Hot pink for instruction */
+            margin-bottom: 3rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(233, 30, 99, 0.8); /* Stronger glow */
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        #imposter-secret-info {
+            font-size: 1.6rem; /* Larger */
+            color: #ffeb3b; /* Bright yellow for secret info */
+            margin-top: 2.5rem;
+            max-width: 95%; /* Wider for better readability */
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #3f51b5; /* Indigo background for emphasis */
+            padding: 3rem;
+            border-radius: 2.5rem; /* MORE ROUNDED */
+            border: 5px solid #ffc107; /* Amber yellow border */
+            box-shadow: 0 12px 30px rgba(255, 193, 7, 0.6); /* Yellow glow */
+            line-height: 1.9; /* Better line spacing */
+            font-weight: 700; /* Bold */
+        }
+        #imposter-secret-info span {
+            display: block; /* Make each line a block for better spacing */
+            margin-bottom: 0.75rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+        #current-question {
+            font-size: 3.8rem; /* Even larger for prominence */
+            font-weight: extrabold;
+            color: #ff9800; /* Orange for main question */
+            margin-bottom: 3.5rem;
+            text-shadow: 0 0 25px rgba(255, 152, 0, 0.7);
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        /* Player tag styling */
+        .player-tag {
+            @apply bg-gray-800 text-white px-7 py-3.5 rounded-full flex items-center gap-4 text-xl font-semibold transition-all duration-300 ease-in-out hover:bg-gray-700; /* Already rounded-full, keeping consistent */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+            font-family: 'Montserrat', sans-serif;
+        }
+        .player-tag button {
+            @apply text-white/90 hover:text-white transition-colors duration-200 text-2xl;
+        }
+        /* General headings */
+        h1, h2, h3 {
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        h1 {
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container" class="space-y-14">
+        <h1 class="text-8xl font-extrabold text-pink-500 mb-12 tracking-widest drop-shadow-2xl">Who's the Imposter?</h1>
+
+        <div id="message-box" class="message-box hidden"></div>
+
+        <div id="setup-section" class="space-y-12">
+            <h2 class="text-6xl font-semibold text-gray-100">Game Setup</h2>
+            <div class="flex flex-wrap justify-center gap-10">
+                <input type="text" id="player-name-input" placeholder="Enter player name" class="w-full sm:w-auto flex-grow max-w-lg">
+                <button id="add-player-btn" class="btn">Add Player</button>
+            </div>
+            <div id="player-list" class="flex flex-wrap justify-center gap-6 mt-10">
+                </div>
+            <div class="flex flex-wrap justify-center items-center gap-10 mt-12">
+                <label for="num-imposters-input" class="text-gray-100 text-4xl font-medium">Number of Imposters:</label>
+                <input type="number" id="num-imposters-input" value="1" min="1" class="w-40 text-center text-4xl p-5">
+            </div>
+            <div class="mt-14 space-y-8">
+                <h3 class="text-5xl font-semibold text-gray-100">Custom Questions (Optional)</h3>
+                <textarea id="custom-questions-input" rows="12" placeholder="Enter custom questions, one per line.
+For imposter-specific questions, use the format:
+CIVILIAN_QUESTION || IMPOSTER_QUESTION || IMPOSTER_INSTRUCTION
+Example: What's your favorite color? || What's your favorite color that isn't on the rainbow? || Answer with a color not typically found in a rainbow, but try to make it sound like a normal favorite color." class="w-full max-w-4xl mx-auto p-7"></textarea>
+            </div>
+            <button id="start-game-btn" class="btn btn-green text-4xl mt-14">Start Game</button>
+        </div>
+
+        <div id="game-play-section" class="hidden space-y-14">
+            <h2 id="current-question" class="text-3xl font-bold text-yellow-300"></h2>
+
+            <div id="answer-input-phase" class="hidden space-y-12">
+                <p id="player-turn-instruction" class="text-xl text-gray-300 font-medium"></p>
+                <button id="reveal-role-btn" class="btn btn-purple text-5xl py-7 px-14">Reveal My Role</button>
+                <p id="imposter-secret-info" class="text-lg text-gray-300 hidden"></p>
+                <input type="text" id="player-answer-input" placeholder="Type your answer here..." class="w-full max-w-4xl mx-auto p-7 text-4xl hidden">
+                <button id="submit-answer-btn" class="btn text-4xl py-7 px-14 hidden">Submit Answer</button>
+            </div>
+
+            <div id="discussion-voting-phase" class="hidden space-y-12">
+                <h3 class="text-6xl font-semibold text-purple-400">Answers:</h3>
+                <div id="answers-display" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+                    </div>
+                <h3 class="text-6xl font-semibold text-purple-400 mt-14">Vote for the Imposter:</h3>
+                <div id="voting-buttons" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-10">
+                    </div>
+            </div>
+
+            <div id="results-phase" class="hidden space-y-12">
+                <h3 class="text-6xl font-semibold text-red-500">Round Results:</h3>
+                <p id="eliminated-player-info" class="text-5xl text-gray-100 font-bold"></p>
+                <p id="imposter-reveal-info" class="text-5xl text-gray-100 font-bold"></p>
+                <div class="flex flex-wrap justify-center gap-10 mt-14">
+                    <button id="next-round-btn" class="btn btn-green text-4xl">Next Round</button>
+                    <button id="re-vote-btn" class="btn btn-purple text-4xl">Re-vote on This Round</button>
+                    <button id="restart-game-btn" class="btn btn-red text-4xl">Restart Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Global variables for Firebase (will be provided by the Canvas environment)
+        // If running outside Canvas, these will be undefined, so we provide fallbacks.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Firebase imports (will be handled by the Canvas environment for execution)
+        // We include them here for clarity if running in a standard browser environment.
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Initialize Firebase
+        let app;
+        let db;
+        let auth;
+        let userId; // Will store the current user's ID
+        let isAuthReady = false; // Flag to indicate if authentication is ready
+
+        // Game State Variables
+        let players = []; // Stores all players, active or eliminated
+        let imposters = [];
+        let numImposters = 1;
+        let currentQuestionIndex = 0;
+        let currentPlayerIndex = 0; // For answer input phase
+        let gameState = 'setup'; // 'setup', 'answering', 'discussing', 'voting', 'results'
+        let playerAnswers = {}; // Stores answers for the current round: { playerName: answer }
+        let votes = {}; // Stores votes for the current round: { voterName: votedPlayerName }
+        let allQuestions = []; // Combined default and custom questions
+        let activePlayersInRound = []; // Stores players active in the current round, in shuffled order for turn order
+
+        // DOM Elements
+        const setupSection = document.getElementById('setup-section');
+        const gamePlaySection = document.getElementById('game-play-section');
+        const playerNameInput = document.getElementById('player-name-input');
+        const addPlayerBtn = document.getElementById('add-player-btn');
+        const playerListDiv = document.getElementById('player-list');
+        const numImpostersInput = document.getElementById('num-imposters-input');
+        const customQuestionsInput = document.getElementById('custom-questions-input');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const currentQuestionElem = document.getElementById('current-question');
+        const answerInputPhase = document.getElementById('answer-input-phase');
+        const playerTurnInstruction = document.getElementById('player-turn-instruction');
+        const revealRoleBtn = document.getElementById('reveal-role-btn');
+        const imposterSecretInfo = document.getElementById('imposter-secret-info');
+        const playerAnswerInput = document.getElementById('player-answer-input');
+        const submitAnswerBtn = document.getElementById('submit-answer-btn');
+        const discussionVotingPhase = document.getElementById('discussion-voting-phase');
+        const answersDisplayDiv = document.getElementById('answers-display');
+        const votingButtonsDiv = document.getElementById('voting-buttons');
+        const resultsPhase = document.getElementById('results-phase');
+        const eliminatedPlayerInfo = document.getElementById('eliminated-player-info');
+        const imposterRevealInfo = document.getElementById('imposter-reveal-info');
+        const nextRoundBtn = document.getElementById('next-round-btn');
+        const reVoteBtn = document.getElementById('re-vote-btn'); // New button
+        const restartGameBtn = document.getElementById('restart-game-btn');
+
+        const messageBox = document.getElementById('message-box');
+
+        // Pre-defined questions as objects with civilian, imposter, and instruction
+        const defaultQuestions = [
+            {
+                civilian: "What's your favorite type of pizza topping?",
+                imposter: "What's your favorite type of pizza topping that most people dislike?",
+                instruction: "Choose a controversial topping (e.g., pineapple, anchovies, olives) and present it as your genuine favorite."
+            },
+            {
+                civilian: "What's your ideal superpower?",
+                imposter: "What's your ideal superpower that would be really annoying in real life?",
+                instruction: "Pick a superpower that sounds cool but has a major inconvenient side effect (e.g., teleportation but only to random locations, mind-reading but you hear everyone's thoughts constantly)."
+            },
+            {
+                civilian: "What's your favorite way to spend a rainy day?",
+                imposter: "What's your favorite way to spend a rainy day that involves *no technology*?",
+                instruction: "Describe a non-tech activity (e.g., staring at a wall, organizing socks, counting ceiling tiles) as if it's a perfectly normal and enjoyable way to spend a rainy day."
+            },
+            {
+                civilian: "What's the weirdest food combination you secretly enjoy?",
+                imposter: "What's the weirdest food combination you *pretend* to enjoy to seem unique?",
+                instruction: "Invent a truly bizarre food combination that sounds just plausible enough to be 'weird but good' (e.g., peanut butter and pickle sandwich, ketchup on ice cream)."
+            },
+            {
+                civilian: "If you could instantly learn any language, which would it be?",
+                imposter: "If you could instantly learn any language, which *extinct* language would it be?",
+                instruction: "Choose an ancient or extinct language (e.g., Latin, Ancient Greek, Sumerian) and explain why you'd learn it as if it were still commonly spoken."
+            },
+            {
+                civilian: "What's your most irrational fear?",
+                imposter: "What's your most irrational fear that you *developed from a children's book*?",
+                instruction: "Describe a fear that sounds silly but is rooted in a specific, innocent children's story (e.g., fear of hungry caterpillars, fear of mischievous wild things)."
+            },
+            {
+                civilian: "What's your favorite type of fictional creature?",
+                imposter: "What's your favorite type of fictional creature that you'd *least* want to encounter in real life?",
+                instruction: "Choose a creature that's cool in fiction but terrifying/impractical in reality (e.g., a dragon that constantly sets things on fire, a vampire that can't stop complaining)."
+            },
+            {
+                civilian: "What's a talent you wish you had?",
+                imposter: "What's a talent you wish you had that would be *completely useless in modern society*?",
+                instruction: "Invent a talent that would have been useful in a past era but is pointless now (e.g., expert quill penmanship, professional town crier, master of semaphore)."
+            },
+            {
+                civilian: "What's your favorite historical event?",
+                imposter: "What's your favorite historical event that you *wish you could have prevented*?",
+                instruction: "Pick a significant historical event (e.g., the sinking of the Titanic, the invention of disco) and explain why you 'love' it, but hint at wanting to change it."
+            },
+            {
+                civilian: "What's your favorite type of footwear?",
+                imposter: "What's your favorite type of footwear that's *terrible for walking*?",
+                instruction: "Choose impractical footwear (e.g., stilts, flippers, glass slippers) and describe why you love them for everyday wear."
+            },
+            {
+                civilian: "What's your favorite breakfast food?",
+                imposter: "What's your favorite breakfast food that you can only eat with your hands?",
+                instruction: "Pick a breakfast food typically eaten with cutlery (e.g., oatmeal, scrambled eggs) and describe how you'd eat it by hand, making it sound appealing."
+            },
+            {
+                civilian: "What's your favorite board game?",
+                imposter: "What's your favorite board game that takes over 5 hours to play?",
+                instruction: "Name a very long or complex board game (e.g., Twilight Imperium, Gloomhaven) and explain why its length is a 'feature'."
+            },
+            {
+                civilian: "What's your favorite animal?",
+                imposter: "What's your favorite animal that would be terrible to have as a pet?",
+                instruction: "Choose a wild or dangerous animal (e.g., grizzly bear, shark, venomous snake) and describe why it would be your ideal pet, ignoring practicalities."
+            },
+            {
+                civilian: "What's your favorite season?",
+                imposter: "What's your favorite season for wearing a full winter coat indoors?",
+                instruction: "Pick a season when wearing a heavy coat indoors would be unusual (e.g., summer, spring) and justify it with a quirky reason (e.g., 'I love the challenge')."
+            },
+            {
+                civilian: "What's your favorite type of book genre?",
+                imposter: "What's your favorite type of book genre that's actually a niche internet subculture?",
+                instruction: "Invent a fictional or highly specific internet-based genre (e.g., 'Victorian Steampunk Pirate Romance Fanfiction,' 'Quantum Physics Cozy Mysteries') and describe its appeal."
+            },
+            {
+                civilian: "What's your go-to karaoke song?",
+                imposter: "What's your go-to karaoke song that no one else knows?",
+                instruction: "Choose an obscure song or one from a very niche genre and explain why it's your 'go-to' for a crowd."
+            },
+            {
+                civilian: "What's your dream job?",
+                imposter: "What's your dream job that sounds impressive but involves very little actual work?",
+                instruction: "Describe a job that sounds grand but is mostly ceremonial or passive (e.g., 'Official Cloud Fluffer,' 'Professional Paint Dryer Observer')."
+            },
+            {
+                civilian: "What's your favorite way to travel?",
+                imposter: "What's your favorite way to travel that's incredibly inefficient?",
+                instruction: "Pick a slow, impractical, or overly complicated mode of travel (e.g., unicycle, hot air balloon, walking backwards) and explain its 'benefits'."
+            },
+            {
+                civilian: "What's one thing you can't live without?",
+                imposter: "What's one thing you can't live without that's completely unnecessary?",
+                instruction: "Name something trivial or absurd (e.g., a specific brand of fancy toothpicks, a pet rock, a collection of lint) and explain why it's essential to your life."
+            },
+            {
+                civilian: "What's your favorite type of art?",
+                imposter: "What's your favorite type of art that's only appreciated by a very small group of people?",
+                instruction: "Describe a highly niche or abstract art form (e.g., 'interpretive dance using only eyebrows,' 'sculptures made from dryer lint') and express your deep appreciation for it."
+            }
+        ];
+
+        // --- Firebase Initialization and Authentication ---
+        const initFirebase = async () => {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Listen for auth state changes
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase Auth Ready. User ID:", userId);
+                        isAuthReady = true;
+                        // Display user ID for multi-user context (even if local, good for debugging)
+                        showMessage(`Welcome! Your user ID: ${userId}`, 'success', 5000);
+                        // Start listening to game state from Firestore if applicable
+                        // For this local game, we don't need real-time sync across devices,
+                        // but this setup is good practice for future expansion.
+                    } else {
+                        // Sign in anonymously if no token is provided or user is signed out
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                showMessage("Failed to connect to game server. Please try again.", 'error');
+            }
+        };
+
+        // --- Utility Functions ---
+        function showMessage(message, type = 'info', duration = 3000) {
+            messageBox.textContent = message;
+            // Remove previous type classes
+            messageBox.classList.remove('bg-gray-900', 'bg-emerald-700', 'bg-red-700'); /* Updated class names */
+            if (type === 'success') {
+                messageBox.classList.add('bg-emerald-700'); /* Brighter emerald */
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-700'); /* Brighter red */
+            } else {
+                messageBox.classList.add('bg-gray-900'); /* Black for info */
+            }
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, duration);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Modified resetGame to optionally keep players
+        function resetGame(keepPlayers = false) {
+            if (!keepPlayers) {
+                players = []; // Clear players only if not keeping them
+                playerListDiv.innerHTML = '';
+                playerNameInput.value = '';
+            } else {
+                // Reset properties for existing players
+                players.forEach(player => {
+                    player.role = 'civilian';
+                    player.isEliminated = false;
+                    player.answer = '';
+                });
+            }
+            imposters = [];
+            currentQuestionIndex = 0;
+            currentPlayerIndex = 0;
+            gameState = 'setup';
+            playerAnswers = {};
+            votes = {};
+            allQuestions = []; // Reset questions
+            activePlayersInRound = []; // Reset active players for round
+
+            numImpostersInput.value = '1';
+            customQuestionsInput.value = ''; // Clear custom questions
+
+            setupSection.classList.remove('hidden');
+            gamePlaySection.classList.add('hidden'); // Ensure game play section is hidden on reset
+            answerInputPhase.classList.add('hidden');
+            discussionVotingPhase.classList.add('hidden');
+            resultsPhase.classList.add('hidden');
+            messageBox.classList.add('hidden'); // Hide any lingering messages
+            renderPlayerList(); // Re-render player list (will show existing if keepPlayers is true)
+        }
+
+        // New function to restart game with existing players
+        function restartGameWithExistingPlayers() {
+            resetGame(true); // Keep players
+            startGame(); // Start a new game with them
+            showMessage('Game restarted with previous players and new roles!', 'success');
+        }
+
+
+        // --- Player Management ---
+        function addPlayer() {
+            const name = playerNameInput.value.trim();
+            if (name && !players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                players.push({ name: name, role: 'civilian', answer: '', isEliminated: false });
+                renderPlayerList();
+                playerNameInput.value = '';
+                showMessage(`${name} added!`, 'success');
+            } else if (name) {
+                showMessage('Player with this name already exists!', 'error');
+            } else {
+                showMessage('Please enter a player name.', 'info');
+            }
+        }
+
+        // Modified removePlayer to be globally accessible for event listeners
+        window.removePlayer = function(nameToRemove) { // Make it a global function
+            players = players.filter(p => p.name !== nameToRemove);
+            renderPlayerList();
+            showMessage(`${nameToRemove} removed.`, 'info');
+        }
+
+        function renderPlayerList() {
+            playerListDiv.innerHTML = '';
+            if (players.length === 0) {
+                playerListDiv.innerHTML = '<p class="text-gray-400 font-medium text-xl">No players added yet. Add at least 3 to start!</p>'; /* Darker gray text */
+                startGameBtn.disabled = true;
+            } else {
+                players.forEach(player => {
+                    const playerTag = document.createElement('div');
+                    playerTag.className = 'player-tag'; // Use the new class
+                    playerTag.innerHTML = `
+                        <span>${player.name}</span>
+                        <button class="text-white/90 hover:text-white player-remove-btn" data-player-name="${player.name}">
+                            &times;
+                        </button>
+                    `;
+                    playerListDiv.appendChild(playerTag);
+                });
+                // Attach event listeners after all buttons are added to the DOM
+                document.querySelectorAll('.player-remove-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const playerName = event.target.dataset.playerName;
+                        removePlayer(playerName);
+                    });
+                });
+                startGameBtn.disabled = false;
+            }
+        }
+
+        // --- Game Logic ---
+        function startGame() {
+            numImposters = parseInt(numImpostersInput.value);
+
+            if (players.length < 3) {
+                showMessage('Need at least 3 players to start the game.', 'error');
+                return;
+            }
+            if (numImposters >= players.length) {
+                showMessage('Number of imposters must be less than total players.', 'error');
+                return;
+            }
+            if (numImposters < 1) {
+                showMessage('There must be at least 1 imposter.', 'error');
+                return;
+            }
+
+            // Parse custom questions
+            const customQsText = customQuestionsInput.value.trim();
+            const customQs = [];
+            if (customQsText) {
+                customQsText.split('\n').forEach(line => {
+                    const parts = line.split('||').map(p => p.trim());
+                    if (parts.length === 3) {
+                        customQs.push({
+                            civilian: parts[0],
+                            imposter: parts[1],
+                            instruction: parts[2]
+                        });
+                    } else if (parts.length === 1 && parts[0].length > 0) {
+                        // If only one part, treat as a civilian-only question
+                        customQs.push({
+                            civilian: parts[0],
+                            imposter: parts[0], // Imposter gets same question
+                            instruction: "Answer truthfully, or try to be creative if you're an imposter!" // Generic instruction
+                        });
+                    }
+                });
+            }
+
+            allQuestions = [...defaultQuestions, ...customQs];
+            shuffleArray(allQuestions); // Randomize the order of all questions
+
+            assignRoles();
+            console.log("Players array after role assignment (shuffled):", players.map(p => ({ name: p.name, role: p.role })));
+            setupSection.classList.add('hidden');
+            gamePlaySection.classList.remove('hidden');
+            startNewRound();
+        }
+
+        function assignRoles() {
+            shuffleArray(players); // Randomize player order
+            imposters = [];
+            players.forEach((player, index) => {
+                player.role = 'civilian'; // Reset roles
+                player.isEliminated = false; // Reset elimination status
+                player.answer = ''; // Clear previous answers
+                if (index < numImposters) {
+                    player.role = 'imposter';
+                    imposters.push(player);
+                }
+            });
+            gameState = 'answering';
+            showMessage(`Roles assigned! There are ${numImposters} imposter(s).`, 'info', 5000);
+            console.log("Imposters:", imposters.map(p => p.name)); // For debugging, remove in production
+        }
+
+        function startNewRound() {
+            console.log("--- Starting new round ---");
+            console.log("Current question index:", currentQuestionIndex);
+            console.log("Total questions:", allQuestions.length);
+
+            if (currentQuestionIndex >= allQuestions.length) {
+                showMessage('No more questions! Game Over.', 'info');
+                return;
+            }
+
+            // Reset for new round
+            playerAnswers = {}; // Clear answers for new round
+            votes = {};
+            currentPlayerIndex = 0;
+            gameState = 'answering';
+
+            // Hide the main question initially
+            currentQuestionElem.textContent = '';
+            answerInputPhase.classList.add('hidden');
+            discussionVotingPhase.classList.add('hidden');
+            resultsPhase.classList.add('hidden');
+            playerAnswerInput.value = ''; // Clear input
+
+            // Filter out eliminated players for the current round and shuffle their order
+            activePlayersInRound = players.filter(p => !p.isEliminated);
+            shuffleArray(activePlayersInRound); // Shuffle the turn order for this round!
+            console.log("Active players for this round (shuffled turn order):", activePlayersInRound.map(p => p.name));
+
+
+            if (activePlayersInRound.length === 0) {
+                showMessage('All players eliminated! Game Over.', 'error');
+                return;
+            }
+            checkWinCondition();
+
+            if (gameState === 'answering') {
+                showPlayerTurnSetup();
+            }
+        }
+
+        // New function for re-voting on the current round
+        function reVoteCurrentRound() {
+            console.log("--- Re-voting on current round ---");
+            // Don't clear playerAnswers here, as we want to re-use them for re-voting
+            votes = {}; // Clear votes for a fresh vote
+            currentPlayerIndex = 0; // Reset player index for re-answering (if needed) or just for turn order clarity
+            gameState = 'voting'; // Go directly to voting phase
+
+            // No need to re-shuffle activePlayersInRound for re-vote, as answers are already given.
+            // The discussion and voting phase will use the existing playerAnswers.
+
+            showDiscussionAndVotingPhase();
+            showMessage('Re-voting on the current question. Discuss and vote again!', 'info', 7000);
+        }
+
+
+        function showPlayerTurnSetup() {
+            console.log("Inside showPlayerTurnSetup function.");
+            console.log(`showPlayerTurnSetup: currentPlayerIndex=${currentPlayerIndex}, activePlayersInRound.length=${activePlayersInRound.length}`);
+
+            if (currentPlayerIndex >= activePlayersInRound.length) {
+                console.log("showPlayerTurnSetup: All players have answered. Transitioning to discussion phase.");
+                showDiscussionAndVotingPhase();
+                return;
+            }
+
+            const currentPlayer = activePlayersInRound[currentPlayerIndex]; // Use activePlayersInRound
+            console.log("showPlayerTurnSetup: currentPlayer object:", currentPlayer);
+            
+            if (!currentPlayer) {
+                console.error("Error: currentPlayer is unexpectedly undefined in showPlayerTurnSetup.", { currentPlayerIndex, activePlayersInRoundLength: activePlayersInRound.length, activePlayersInRoundNames: activePlayersInRound.map(p => p.name) });
+                showMessage("Something went wrong with player turn. Moving to next phase.", 'error', 5000);
+                showDiscussionAndVotingPhase();
+                return;
+            }
+
+            // Set up the initial turn screen: "Pass the device to X" and "Reveal My Role" button
+            playerTurnInstruction.textContent = `Pass the device to ${currentPlayer.name}.`;
+            playerTurnInstruction.classList.remove('hidden');
+
+            revealRoleBtn.classList.remove('hidden'); // Show the reveal button
+            imposterSecretInfo.classList.add('hidden'); // Hide secret info initially
+            playerAnswerInput.classList.add('hidden'); // Hide answer input
+            submitAnswerBtn.classList.add('hidden'); // Hide submit button
+            playerAnswerInput.value = ''; // Ensure input is cleared
+
+            // Hide the main question element until 'Reveal My Role' is clicked
+            currentQuestionElem.textContent = ''; 
+
+            answerInputPhase.classList.remove('hidden'); // Show the overall input phase container
+        }
+
+        revealRoleBtn.addEventListener('click', () => {
+            console.log("Reveal Role Button Clicked!");
+            const currentPlayer = activePlayersInRound[currentPlayerIndex]; // Use activePlayersInRound
+            const currentQuestion = allQuestions[currentQuestionIndex];
+
+            // Hide the reveal button
+            revealRoleBtn.classList.add('hidden');
+
+            // Display role and specific info
+            if (currentPlayer.role === 'imposter') {
+                imposterSecretInfo.innerHTML = `
+                    <span class="text-purple-300 font-bold">You are the IMPOSTER!</span><br>
+                    Your secret question: <span class="text-yellow-300">${currentQuestion.imposter}</span><br>
+                    Instruction: <span class="text-yellow-300">${currentQuestion.instruction}</span>
+                `;
+                imposterSecretInfo.classList.remove('hidden');
+            } else {
+                imposterSecretInfo.innerHTML = `<span class="text-emerald-400 font-bold">You are a CIVILIAN.</span>`; /* Changed color */
+                imposterSecretInfo.classList.remove('hidden');
+            }
+
+            // After a short delay, show the answer input and submit button AND the main question
+            setTimeout(() => {
+                currentQuestionElem.textContent = allQuestions[currentQuestionIndex].civilian; // Reveal the main question
+                playerAnswerInput.classList.remove('hidden');
+                submitAnswerBtn.classList.remove('hidden');
+                playerAnswerInput.focus();
+            }, 2000); // 2 second delay to read the role
+        });
+
+
+        function submitAnswer() {
+            const currentPlayer = activePlayersInRound[currentPlayerIndex]; // Use activePlayersInRound
+            const answer = playerAnswerInput.value.trim();
+
+            if (answer === '') {
+                showMessage('Please enter an answer.', 'info');
+                return;
+            }
+
+            playerAnswers[currentPlayer.name] = answer;
+            currentPlayer.answer = answer; // Store answer in player object for display
+            showMessage(`${currentPlayer.name}'s answer submitted!`, 'success');
+
+            currentPlayerIndex++;
+            answerInputPhase.classList.add('hidden'); // Hide input phase after submission
+            playerTurnInstruction.classList.add('hidden'); // Hide turn instruction
+            imposterSecretInfo.classList.add('hidden'); // Hide imposter info immediately
+            playerAnswerInput.value = ''; // Clear input for next turn
+
+            // Proceed to the setup for the next player's turn
+            showPlayerTurnSetup();
+        }
+
+        function showDiscussionAndVotingPhase() {
+            console.log("Inside showDiscussionAndVotingPhase function.");
+            gameState = 'voting';
+            answerInputPhase.classList.add('hidden');
+            discussionVotingPhase.classList.remove('hidden');
+            answersDisplayDiv.innerHTML = '';
+            votingButtonsDiv.innerHTML = '';
+
+            // Ensure current question is visible during discussion
+            currentQuestionElem.textContent = allQuestions[currentQuestionIndex].civilian;
+
+            const activePlayers = players.filter(p => !p.isEliminated); // Re-filter for discussion display
+            console.log("Discussion Phase: Active players:", activePlayers.map(p => p.name));
+
+            if (activePlayers.length === 0) {
+                showMessage('No active players for discussion. Game Over.', 'error');
+                checkWinCondition(); // Will lead to end game
+                return;
+            }
+
+            activePlayers.forEach(player => {
+                const answerCard = document.createElement('div');
+                answerCard.className = 'card';
+                answerCard.innerHTML = `
+                    <p>${player.name}</p>
+                    <p>${player.answer}</p>
+                `;
+                answersDisplayDiv.appendChild(answerCard);
+            });
+
+            activePlayers.forEach(player => {
+                const voteBtn = document.createElement('button');
+                voteBtn.className = 'btn btn-red';
+                voteBtn.textContent = `Vote ${player.name}`;
+                voteBtn.onclick = () => castVote(player.name);
+                votingButtonsDiv.appendChild(voteBtn);
+            });
+
+            showMessage('Discuss the answers and vote for who you think is the imposter!', 'info', 10000);
+        }
+
+        function castVote(votedPlayerName) {
+            const activePlayers = players.filter(p => !p.isEliminated);
+            activePlayers.forEach(player => {
+                votes[player.name] = votedPlayerName;
+            });
+
+            tallyVotes();
+        }
+
+        function tallyVotes() {
+            const voteCounts = {};
+            for (const voter in votes) {
+                const votedFor = votes[voter];
+                voteCounts[votedFor] = (voteCounts[votedFor] || 0) + 1;
+            }
+
+            let eliminatedPlayer = null;
+            let maxVotes = 0;
+            let tiedPlayers = [];
+
+            for (const playerName in voteCounts) {
+                if (voteCounts[playerName] > maxVotes) {
+                    maxVotes = voteCounts[playerName];
+                    eliminatedPlayer = players.find(p => p.name === playerName);
+                    tiedPlayers = [eliminatedPlayer];
+                } else if (voteCounts[playerName] === maxVotes) {
+                    tiedPlayers.push(players.find(p => p.name === playerName));
+                }
+            }
+
+            if (tiedPlayers.length > 1) {
+                showMessage('It\'s a tie! No one was eliminated this round.', 'info');
+                eliminatedPlayer = null;
+            } else if (eliminatedPlayer) {
+                eliminatedPlayer.isEliminated = true;
+                showMessage(`${eliminatedPlayer.name} has been eliminated!`, 'info');
+            } else {
+                showMessage('No votes cast or no clear majority. No one was eliminated.', 'info');
+            }
+
+            showResults(eliminatedPlayer);
+        }
+
+        function showResults(eliminatedPlayer) {
+            gameState = 'results';
+            discussionVotingPhase.classList.add('hidden');
+            resultsPhase.classList.remove('hidden');
+
+            if (eliminatedPlayer) {
+                eliminatedPlayerInfo.textContent = `${eliminatedPlayer.name} was eliminated.`;
+                if (eliminatedPlayer.role === 'imposter') {
+                    imposterRevealInfo.textContent = `They were indeed an IMPOSTER! 🎉`;
+                    imposterRevealInfo.classList.remove('text-red-700'); /* Changed class name */
+                    imposterRevealInfo.classList.add('text-emerald-700'); /* Changed color */
+                } else {
+                    imposterRevealInfo.textContent = `They were a CIVILIAN. 😔 The imposter(s) remain!`;
+                    imposterRevealInfo.classList.remove('text-emerald-700'); /* Changed class name */
+                    imposterRevealInfo.classList.add('text-red-700');
+                }
+            } else {
+                eliminatedPlayerInfo.textContent = 'No one was eliminated this round.';
+                imposterRevealInfo.textContent = 'The imposter(s) remain at large!';
+                imposterRevealInfo.classList.remove('text-emerald-700'); /* Changed class name */
+                imposterRevealInfo.classList.add('text-red-700');
+            }
+
+            checkWinCondition();
+        }
+
+        function checkWinCondition() {
+            const activeCivilians = players.filter(p => !p.isEliminated && p.role === 'civilian');
+            const activeImposters = players.filter(p => !p.isEliminated && p.role === 'imposter');
+
+            if (activeImposters.length === 0) {
+                showMessage('CIVILIANS WIN! All imposters have been eliminated.', 'success', 10000);
+                nextRoundBtn.classList.add('hidden');
+                reVoteBtn.classList.add('hidden'); // Hide re-vote button if game is over
+                gameState = 'game_over';
+            } else if (activeImposters.length >= activeCivilians.length) {
+                showMessage('IMPOSTERS WIN! They outnumber the civilians.', 'error', 10000);
+                nextRoundBtn.classList.add('hidden');
+                reVoteBtn.classList.add('hidden'); // Hide re-vote button if game is over
+                gameState = 'game_over';
+            } else {
+                // Game continues
+                nextRoundBtn.classList.remove('hidden');
+                reVoteBtn.classList.remove('hidden'); // Show re-vote button if game continues
+                if (gameState !== 'game_over') {
+                    // Only increment question index if we are truly going to a new round
+                    // This is handled by nextRoundBtn's click handler now.
+                }
+            }
+        }
+
+        // --- Event Listeners ---
+        addPlayerBtn.addEventListener('click', addPlayer);
+        playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addPlayer();
+            }
+        });
+        startGameBtn.addEventListener('click', startGame);
+        submitAnswerBtn.addEventListener('click', submitAnswer);
+        playerAnswerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+        nextRoundBtn.addEventListener('click', () => {
+            currentQuestionIndex++; // Advance to next question
+            startNewRound(); // Start a new round with the new question
+        });
+        reVoteBtn.addEventListener('click', reVoteCurrentRound); // New event listener for re-vote
+        restartGameBtn.addEventListener('click', restartGameWithExistingPlayers); // Changed to new function
+
+        // Initial render of player list (empty)
+        renderPlayerList();
+
+        // Initialize Firebase when the script loads
+        initFirebase();
+    </script>
+</body>
+</html>
